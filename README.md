@@ -27,7 +27,7 @@ Image Processing Suite is an educational and practical tool that implements vari
 
 ### Clone the Repository
 ```bash
-git clone https://github.com/yourusername/image-processing.git
+git clone https://github.com/Ahmed-alaa47/image-processing.git
 cd image-processing
 ```
 
