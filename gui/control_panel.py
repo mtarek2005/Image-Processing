@@ -1,3 +1,5 @@
+# Replace the entire ControlPanel class in gui/control_panel.py with this:
+
 import tkinter as tk
 from tkinter import simpledialog
 from gui.styles import AppStyles
@@ -5,31 +7,48 @@ from gui.styles import AppStyles
 
 class ControlPanel:
     def __init__(self, parent, callbacks):
-        self.frame = tk.Frame(parent, bg=AppStyles.BG_DARK)
         self.callbacks = callbacks
         
-        canvas = tk.Canvas(self.frame, bg=AppStyles.BG_DARK)
-        scrollbar = tk.Scrollbar(self.frame, command=canvas.yview)
-        self.scroll_frame = tk.Frame(canvas, bg=AppStyles.BG_DARK)
+        # Main frame
+        self.frame = tk.Frame(parent, bg=AppStyles.BG_DARK)
         
-        self.scroll_frame.bind("<Configure>", 
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        # Create canvas with scrollbar
+        self.canvas = tk.Canvas(self.frame, bg=AppStyles.BG_DARK, highlightthickness=0)
+        scrollbar = tk.Scrollbar(self.frame, orient="vertical", command=self.canvas.yview)
         
-        canvas.create_window((0, 0), window=self.scroll_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+        # Scrollable frame inside canvas
+        self.scroll_frame = tk.Frame(self.canvas, bg=AppStyles.BG_DARK)
         
-        canvas.pack(side="left", fill="both", expand=True)
+        # Configure scrolling
+        self.scroll_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
+        
+        self.canvas.create_window((0, 0), window=self.scroll_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack canvas and scrollbar
+        self.canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
+        # Enable mousewheel scrolling
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        
         self._create_buttons()
+    
+    def _on_mousewheel(self, event):
+        """Enable mouse wheel scrolling."""
+        self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
     
     def _btn(self, text, cmd, section=None):
         if section:
             tk.Label(self.scroll_frame, text=section, font=AppStyles.FONT_BOLD,
-                    fg=AppStyles.ACCENT, bg=AppStyles.BG_DARK).pack(fill="x", pady=(10,5))
+                    fg=AppStyles.ACCENT, bg=AppStyles.BG_DARK).pack(fill="x", pady=(10,5), padx=10)
         
         btn = tk.Button(self.scroll_frame, text=text, command=cmd,
-                       bg=AppStyles.ACCENT, fg="white", font=AppStyles.FONT_NORMAL)
+                       bg=AppStyles.ACCENT, fg="white", font=AppStyles.FONT_NORMAL,
+                       width=20)
         btn.pack(fill="x", padx=10, pady=2)
     
     def _create_buttons(self):
@@ -82,9 +101,13 @@ class ControlPanel:
         self._btn("Predictive", lambda: self.callbacks['compress']('predictive'))
         self._btn("Wavelet", lambda: self.callbacks['compress']('wavelet'))
         self._btn("Compare All", self.callbacks['compare_compress'])
+        
+        # Add some bottom padding so last button is visible
+        tk.Frame(self.scroll_frame, height=20, bg=AppStyles.BG_DARK).pack()
 
 
 def ask_params(parent, title, params):
+    """Simple parameter dialog."""
     result = {}
     for name, default, desc in params:
         val = simpledialog.askstring(title, f"{name} ({desc}):", 
