@@ -237,21 +237,25 @@ class CompressionEngine:
         current = ()
         
         for pixel in flat_image:
+            pixel = int(pixel)  # Ensure integer
             current_plus = current + (pixel,)
             if current_plus in dictionary:
                 current = current_plus
             else:
-                encoded.append(dictionary[current])
+                # Add current to encoded if it exists
+                if current in dictionary:
+                    encoded.append(dictionary[current])
                 dictionary[current_plus] = dict_size
                 dict_size += 1
                 current = (pixel,)
         
-        if current:
+        # Don't forget the last sequence
+        if current and current in dictionary:
             encoded.append(dictionary[current])
         
         # Calculate sizes
         original_bits = len(flat_image) * 8
-        bits_per_code = int(np.ceil(np.log2(dict_size)))
+        bits_per_code = int(np.ceil(np.log2(dict_size))) if dict_size > 1 else 8
         compressed_bits = len(encoded) * bits_per_code
         
         compression_ratio = original_bits / compressed_bits if compressed_bits > 0 else 0
@@ -262,6 +266,48 @@ class CompressionEngine:
             'dictionary_size': dict_size,
             'original_size_bits': original_bits,
             'compressed_size_bits': compressed_bits,
+            'compression_ratio': compression_ratio,
+            'space_saving_percent': (1 - 1/compression_ratio) * 100 if compression_ratio > 0 else 0
+        }
+
+
+    @staticmethod
+    def bitplane_encode(image):
+        """
+        Apply Bit-plane coding.
+        
+        Args:
+            image: Input image
+            
+        Returns:
+            Dictionary with compression results
+        """
+        gray_image = ensure_grayscale(image).astype(np.uint8)  # Ensure uint8
+        
+        # Extract bit planes
+        bit_planes = []
+        for bit in range(8):
+            plane = (gray_image >> bit) & 1
+            bit_planes.append(plane)
+        
+        # Compress each bit plane using RLE
+        total_compressed_bits = 0
+        compressed_planes = []
+        
+        for plane in bit_planes:
+            rle_result = CompressionEngine.rle_encode(plane)
+            compressed_planes.append(rle_result)
+            total_compressed_bits += rle_result['compressed_size_bits']
+        
+        original_bits = gray_image.size * 8
+        compression_ratio = original_bits / total_compressed_bits if total_compressed_bits > 0 else 0
+        
+        return {
+            'method': 'Bit-Plane Coding',
+            'bit_planes': bit_planes,
+            'compressed_planes': compressed_planes,
+            'original_size_bits': original_bits,
+            'compressed_size_bits': total_compressed_bits,
             'compression_ratio': compression_ratio,
             'space_saving_percent': (1 - 1/compression_ratio) * 100 if compression_ratio > 0 else 0
         }
@@ -372,6 +418,7 @@ class CompressionEngine:
     # BIT-PLANE CODING
     # ============================================================================
     
+
     @staticmethod
     def bitplane_encode(image):
         """
@@ -385,6 +432,10 @@ class CompressionEngine:
         """
         gray_image = ensure_grayscale(image)
         
+        # CRITICAL: Convert to uint8 for bit operations
+        if gray_image.dtype != np.uint8:
+            gray_image = np.clip(gray_image, 0, 255).astype(np.uint8)
+        
         # Extract bit planes
         bit_planes = []
         for bit in range(8):
@@ -396,7 +447,6 @@ class CompressionEngine:
         compressed_planes = []
         
         for plane in bit_planes:
-            flat_plane = plane.flatten()
             rle_result = CompressionEngine.rle_encode(plane)
             compressed_planes.append(rle_result)
             total_compressed_bits += rle_result['compressed_size_bits']
