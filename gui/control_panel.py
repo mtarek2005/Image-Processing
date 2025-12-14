@@ -4,6 +4,7 @@ from gui.styles import AppStyles
 
 
 class ControlPanel:
+    btns=[]
     def __init__(self, parent, callbacks):
         self.frame = tk.Frame(parent, bg=AppStyles.BG_DARK)
         self.callbacks = callbacks
@@ -27,10 +28,15 @@ class ControlPanel:
         if section:
             tk.Label(self.scroll_frame, text=section, font=AppStyles.FONT_BOLD,
                     fg=AppStyles.ACCENT, bg=AppStyles.BG_DARK).pack(fill="x", pady=(10,5))
-        
-        btn = tk.Button(self.scroll_frame, text=text, command=cmd,
+        def cmd_with_disable():
+            [b.config(state=tk.DISABLED) for b in self.btns]
+            cmd()
+            [b.config(state=tk.NORMAL) for b in self.btns]
+
+        btn = tk.Button(self.scroll_frame, text=text, command=cmd_with_disable,
                        bg=AppStyles.ACCENT, fg="white", font=AppStyles.FONT_NORMAL)
         btn.pack(fill="x", padx=10, pady=2)
+        self.btns.append(btn)
     
     def _create_buttons(self):
         # File Operations

@@ -5,6 +5,7 @@ Affine transformation operations: Translation, Scaling, Rotation, Shearing.
 import numpy as np
 from utils.validators import validate_transformation_params, validate_image_array
 from utils.helpers import ensure_grayscale
+from core.prog_upd import prog_upd
 
 
 class AffineTransformations:
@@ -93,10 +94,12 @@ class AffineTransformations:
             channels = image.shape[2]
             result_channels = []
             for c in range(channels):
+                prog_upd.setchnl(c,channels)
                 transformed = AffineTransformations.apply_transformation_matrix(
                     image[:, :, c], matrix, output_shape
                 )
                 result_channels.append(transformed)
+            prog_upd.setchnl(0,1)
             return np.stack(result_channels, axis=2)
         
         # Get dimensions
@@ -119,6 +122,7 @@ class AffineTransformations:
         # Apply inverse mapping
         for out_y in range(out_height):
             for out_x in range(out_width):
+                prog_upd.setprog((out_y*out_width+out_x)/(out_height*out_width))
                 # Create homogeneous coordinates
                 out_coords = np.array([out_x, out_y, 1])
                 

@@ -16,6 +16,7 @@ from core.interpolation import Interpolator
 from core.histogram import HistogramProcessor
 from core.filters import FilterOperations
 from core.compression import CompressionEngine
+from core.prog_upd import prog_upd
 
 
 class MainWindow:
@@ -87,6 +88,12 @@ class MainWindow:
         
         self.panel = ControlPanel(self.ctrl_frame_ref, callbacks)
         self.panel.frame.pack(fill="both", expand=True)
+        def stcb(p,c,cs):
+            if(prog_upd.i%50==0):
+                self.status.config(text=f"Channel {c+1}/{cs} progress: {p*100:.1f}%, Total: {((p+c)/cs)*100:.1f}%")
+                print(f"Channel {c+1}/{cs} progress: {p*100:.1f}%")
+                self.root.update()
+        prog_upd.tr_prog_cb=stcb
     
     def _process(self, func, *args):
         if self.current is None:

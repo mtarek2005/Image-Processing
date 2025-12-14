@@ -195,7 +195,7 @@ class CompressionEngine:
         encoded_value = (low + high) / 2
         
         # Estimate bits needed
-        compressed_bits = int(-np.log2(high - low)) + 1
+        compressed_bits = int(-(np.log2(high - low) if high - low > 0 else 1)) + 1
         original_bits = len(flat_image) * 8
         
         compression_ratio = original_bits / compressed_bits if compressed_bits > 0 else 0
