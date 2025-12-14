@@ -5,6 +5,7 @@ Image interpolation methods for resolution enhancement.
 import numpy as np
 from utils.validators import validate_interpolation_size, validate_image_array
 from utils.math_operations import cubic_weight
+from core.prog_upd import prog_upd
 
 
 class Interpolator:
@@ -37,8 +38,10 @@ class Interpolator:
             channels = image.shape[2]
             result_channels = []
             for c in range(channels):
+                prog_upd.setchnl(c,channels)
                 resized = Interpolator.nearest_neighbor(image[:, :, c], new_size)
                 result_channels.append(resized)
+            prog_upd.setchnl(0,1)
             return np.stack(result_channels, axis=2)
         
         # Get original dimensions
@@ -54,6 +57,7 @@ class Interpolator:
         # Perform nearest neighbor interpolation
         for new_y in range(new_height):
             for new_x in range(new_width):
+                prog_upd.setprog((new_y*new_width+new_x)/(new_height*new_width))
                 # Find corresponding pixel in original image
                 old_x = int(new_x * scale_x)
                 old_y = int(new_y * scale_y)
@@ -94,8 +98,10 @@ class Interpolator:
             channels = image.shape[2]
             result_channels = []
             for c in range(channels):
+                prog_upd.setchnl(c,channels)
                 resized = Interpolator.bilinear(image[:, :, c], new_size)
                 result_channels.append(resized)
+            prog_upd.setchnl(0,1)
             return np.stack(result_channels, axis=2)
         
         # Get original dimensions
@@ -111,6 +117,7 @@ class Interpolator:
         # Perform bilinear interpolation
         for new_y in range(new_height):
             for new_x in range(new_width):
+                prog_upd.setprog((new_y*new_width+new_x)/(new_height*new_width))
                 # Find corresponding position in original image
                 old_x = new_x * scale_x
                 old_y = new_y * scale_y
@@ -164,8 +171,10 @@ class Interpolator:
             channels = image.shape[2]
             result_channels = []
             for c in range(channels):
+                prog_upd.setchnl(c,channels)
                 resized = Interpolator.bicubic(image[:, :, c], new_size)
                 result_channels.append(resized)
+            prog_upd.setchnl(0,1)
             return np.stack(result_channels, axis=2)
         
         # Get original dimensions
@@ -181,6 +190,7 @@ class Interpolator:
         # Perform bicubic interpolation
         for new_y in range(new_height):
             for new_x in range(new_width):
+                prog_upd.setprog((new_y*new_width+new_x)/(new_height*new_width))
                 # Find corresponding position in original image
                 old_x = new_x * scale_x
                 old_y = new_y * scale_y

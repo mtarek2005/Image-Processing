@@ -194,13 +194,8 @@ class CompressionEngine:
         # Final value
         encoded_value = (low + high) / 2
         
-        # Estimate bits needed (with safety check)
-        range_val = high - low
-        if range_val > 0:
-            compressed_bits = max(1, int(-np.log2(range_val)) + 1)
-        else:
-            compressed_bits = len(flat_image) * 8  # Fallback to original size
-        
+        # Estimate bits needed
+        compressed_bits = int(-(np.log2(high - low) if high - low > 0 else 1)) + 1
         original_bits = len(flat_image) * 8
         
         compression_ratio = original_bits / compressed_bits if compressed_bits > 0 else 0
