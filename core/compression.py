@@ -813,8 +813,8 @@ class CompressionEngine:
         print("Running Golomb-Rice Coding...")
         results['golomb_rice'] = CompressionEngine.golomb_rice_encode(image)
         
-        print("Running Arithmetic Coding...")
-        results['arithmetic'] = CompressionEngine.arithmetic_encode(image)
+        #print("Running Arithmetic Coding...")
+        #results['arithmetic'] = CompressionEngine.arithmetic_encode(image)
         
         print("Running LZW Coding...")
         results['lzw'] = CompressionEngine.lzw_encode(image)

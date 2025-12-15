@@ -7,6 +7,11 @@ from gui.styles import AppStyles
 
 class ControlPanel:
     btns=[]
+    content=[]
+    sections=[]
+    section_btns={}
+    section_visible={}
+    section_frames={}
     def __init__(self, parent, callbacks):
         self.callbacks = callbacks
         
@@ -44,8 +49,29 @@ class ControlPanel:
     
     def _btn(self, text, cmd, section=None):
         if section:
-            tk.Label(self.scroll_frame, text=section, font=AppStyles.FONT_BOLD,
-                    fg=AppStyles.ACCENT, bg=AppStyles.BG_DARK).pack(fill="x", pady=(10,5))
+            self.sections.append(section)
+            self.section_btns[section]=[]
+            self.section_visible[section]=True
+            label = tk.Label(self.scroll_frame, text=section, font=AppStyles.FONT_BOLD,
+                    fg=AppStyles.ACCENT, bg=AppStyles.BG_DARK)
+            label.pack(fill="x", pady=(10,5))
+            self.content.append((label,"lbl"))
+            self.section_btns[self.sections[-1]].append((label,"lbl"))
+            def label_click(e):
+                self.section_visible[section]=not self.section_visible[section]
+                for b in self.content:
+                    b[0].pack_forget()
+                for s in self.sections:
+                    for b in self.section_btns[s]:
+                        if self.section_visible[s] or b[1]=="lbl":
+                            if b[1]=="btn":
+                                b[0].pack(fill="x", padx=10, pady=2)
+                            elif b[1]=="lbl":
+                                b[0].pack(fill="x", pady=(10,5))
+                print(self.section_visible[section])
+                if self.section_visible[section]:
+                    print(self.section_btns[section][0][0].pack_info())
+            label.bind("<Button-1>",label_click)
         def cmd_with_disable():
             [b.config(state=tk.DISABLED) for b in self.btns]
             cmd()
@@ -55,6 +81,9 @@ class ControlPanel:
                        bg=AppStyles.ACCENT, fg="white", font=AppStyles.FONT_NORMAL)
         btn.pack(fill="x", padx=10, pady=2)
         self.btns.append(btn)
+        self.content.append((btn,"btn"))
+        self.section_btns[self.sections[-1]].append((btn,"btn"))
+        print(self.section_btns)
     
     def _create_buttons(self):
         # File Operations
@@ -97,7 +126,7 @@ class ControlPanel:
         # Compression
         self._btn("Huffman", lambda: self.callbacks['compress']('huffman'), "🗜️ Compression")
         self._btn("Golomb-Rice", lambda: self.callbacks['compress']('golomb_rice'))
-        self._btn("Arithmetic", lambda: self.callbacks['compress']('arithmetic'))
+        #self._btn("Arithmetic", lambda: self.callbacks['compress']('arithmetic'))
         self._btn("LZW", lambda: self.callbacks['compress']('lzw'))
         self._btn("RLE", lambda: self.callbacks['compress']('rle'))
         self._btn("Symbol-Based", lambda: self.callbacks['compress']('symbol'))
